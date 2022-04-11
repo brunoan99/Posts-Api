@@ -17,7 +17,7 @@ class Comment(BaseModel):
     
     class Config:
         orm_mode = True
-        
+
 
 class CommentFromPost(BaseModel):
     id: int
@@ -30,7 +30,7 @@ class CommentFromPost(BaseModel):
     
     class Config:
         orm_mode = True
-        
+
 
 class CommentFromUser(BaseModel):
     id: int
@@ -40,7 +40,7 @@ class CommentFromUser(BaseModel):
     post: Post
     
     owner_id: int
-    
+
     class Config:
         orm_mode = True
 
@@ -48,21 +48,20 @@ class CommentFromUser(BaseModel):
 class CreateComment(BaseModel):
     content: str
     post_id: int
-    
-    
+
+
 class SearchComment(BaseModel):
     id: int
 
 
 class SearchCommentFromPost(BaseModel):
     post_id: int
-    
-    
+
+
 class SearchCommentFromUser(BaseModel):
     owner_id: int
+
 
 class UpdateComment(BaseModel):
     id: int
     content: str
-    
-    

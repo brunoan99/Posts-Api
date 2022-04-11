@@ -1,7 +1,5 @@
-from typing import List
 from fastapi import status, Depends, APIRouter
 from fastapi.responses import JSONResponse
-from sqlalchemy.orm import Session
 
 from ..database import get_db
 from .. import models, oauth2
@@ -9,7 +7,9 @@ from ..schemas.comment import Comment, CreateComment, SearchComment, UpdateComme
 from ..schemas.general import Message
 from ..schemas.user import ReturnUser
 
+from sqlalchemy.orm import Session
 
+from typing import List
 
 router = APIRouter(
     prefix="/comment",
@@ -29,7 +29,7 @@ def get_comment(body: SearchComment, db: Session = Depends(get_db)):
     return comment
 
 
-@router.post("", response_model=Comment)
+@router.post("", status_code=status.HTTP_201_CREATED, response_model=Comment)
 def create_comment(body: CreateComment, db: Session = Depends(get_db), current_user: ReturnUser = Depends(oauth2.get_current_user)):
     body = body.dict()
     body.update({"owner_id": current_user.id})
@@ -52,7 +52,7 @@ def update_comment(body: UpdateComment, db: Session = Depends(get_db), current_u
         return JSONResponse(status_code=status.HTTP_404_NOT_FOUND, content={"message": f"comment with id: {body['id']} was not found."})
 
     if comment.owner_id != current_user.id:
-        return JSONResponse(status_code=status.HTTP_401_UNAUTHORIZED, content={"message": f""})
+        return JSONResponse(status_code=status.HTTP_401_UNAUTHORIZED, content={"message": f"non authorized."})
 
     comment_query.update(body, synchronize_session=False)
     db.commit()
@@ -85,7 +85,7 @@ def get_comments_from_post(body: SearchCommentFromPost, db: Session = Depends(ge
 
 
 @router.get("s/user", response_model=List[CommentFromUser])
-def get_comments_from_post(body: SearchCommentFromUser, db: Session = Depends(get_db)):    
+def get_comments_from_user(body: SearchCommentFromUser, db: Session = Depends(get_db)):    
     comments = db.query(models.Comment).filter(models.Comment.owner_id == body.owner_id).all()
 
     return comments

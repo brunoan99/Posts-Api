@@ -7,6 +7,7 @@ from ..schemas.user import User, CreateUser, SearchUser, UpdateUser, ReturnUser,
 from ..schemas.general import Message
 
 from sqlalchemy.orm import Session
+
 from typing import List
 
 
@@ -31,6 +32,7 @@ def get_user(body: SearchUser, db: Session = Depends(get_db)):
     if not user:
         return JSONResponse(status_code=status.HTTP_404_NOT_FOUND, content={"message": f'user with id: {user_id} was not found.'})
     return user
+
 
 @router.post("/", status_code=status.HTTP_201_CREATED, response_model=ReturnUser, responses={409: {"model": Message}})
 def create_user(body: CreateUser, db: Session = Depends(get_db)):

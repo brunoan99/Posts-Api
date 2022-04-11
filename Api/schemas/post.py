@@ -3,6 +3,7 @@ from typing import Optional
 from pydantic import BaseModel
 from .user import ReturnUser
 
+
 class Post(BaseModel):
     id: int
     title: str
