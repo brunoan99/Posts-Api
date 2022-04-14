@@ -9,6 +9,7 @@ class Comment(BaseModel):
     id: int
     content: str
     created_at: datetime
+    
     post_id: int
     post: Post
     
@@ -19,30 +20,12 @@ class Comment(BaseModel):
         orm_mode = True
 
 
-class CommentFromPost(BaseModel):
-    id: int
-    content: str
-    created_at: datetime
-    post_id: int
-    owner_id: int
-    
-    owner: ReturnUserComment
+class ReturnComment(BaseModel):
+    Comment: Comment
+    likes: int
     
     class Config:
-        orm_mode = True
-
-
-class CommentFromUser(BaseModel):
-    id: int
-    content: str
-    created_at: datetime
-    post_id: int
-    post: Post
-    
-    owner_id: int
-
-    class Config:
-        orm_mode = True
+        orm_mode = True       
 
 
 class CreateComment(BaseModel):

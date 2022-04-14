@@ -49,8 +49,6 @@ class LikePost(Base):
     post_id = Column(Integer, ForeignKey("posts.id", ondelete="CASCADE"), primary_key=True, nullable=False)
     post = relationship("Post")  
     created_at = Column(TIMESTAMP(timezone=True), nullable=False, server_default=text("now()"))
-    
-    
 
 
 class LikeComment(Base):
@@ -61,4 +59,3 @@ class LikeComment(Base):
     comment_id = Column(Integer, ForeignKey("comments.id", ondelete="CASCADE"), primary_key=True, nullable=False)
     comment = relationship("Comment")
     created_at = Column(TIMESTAMP(timezone=True), nullable=False, server_default=text("now()"))
-    

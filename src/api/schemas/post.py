@@ -17,6 +17,14 @@ class Post(BaseModel):
         orm_mode = True
 
 
+class ReturnPost(BaseModel):
+    Post: Post
+    likes: int
+    
+    class Config:
+        orm_mode = True
+
+
 class CreatePost(BaseModel):
     title: str
     content: str

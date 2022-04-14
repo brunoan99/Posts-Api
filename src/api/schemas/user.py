@@ -21,8 +21,7 @@ class CreateUser(BaseModel):
     password: str
 
 
-class UpdateUser(SearchUser):
-    id: int
+class UpdateUser(BaseModel):
     email: EmailStr
 
 

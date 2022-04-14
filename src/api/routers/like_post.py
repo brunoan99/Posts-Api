@@ -18,6 +18,7 @@ router = APIRouter(
 )
 
 
+#TODO TESTS
 @router.put("", response_model=Message, responses={404: {"model": Message}, 409: {"model": Message}})
 def like_post(body: CreateLikePost, db: Session = Depends(get_db), current_user: ReturnUser = Depends(oauth2.get_current_user)):
 
@@ -43,6 +44,7 @@ def like_post(body: CreateLikePost, db: Session = Depends(get_db), current_user:
     return {"message": f"Removed like in post with id: {body.post_id}"}
 
 
+#TODO TESTS
 @router.put("/toggle", response_model=Message, responses={404: {"model": Message}})
 def like_post_toggle(body: CreateLikePostToggle, db: Session = Depends(get_db), current_user: ReturnUser = Depends(oauth2.get_current_user)):
 
@@ -64,11 +66,13 @@ def like_post_toggle(body: CreateLikePostToggle, db: Session = Depends(get_db), 
     return {"message": f"Removed like in post with id: {body.post_id}"}
 
 
+#TODO TESTS
 @router.get("s", response_model=List[LikePost])
 def get_likes_from_post(body: SearchLikeFromPost, db: Session = Depends(get_db)):    
     return db.query(models.LikePost).filter(models.LikePost.post_id == body.post_id).all()   
 
 
+#TODO TESTS
 @router.get("s/user", response_model=List[LikePost])
 def get_likes_from_user(body: SearchLikeFromUser, db: Session = Depends(get_db)):
     return db.query(models.LikePost).filter(models.LikePost.owner_id == body.owner_id).all()   

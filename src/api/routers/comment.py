@@ -3,13 +3,14 @@ from fastapi.responses import JSONResponse
 
 from ..database import get_db
 from .. import models, oauth2
-from ..schemas.comment import Comment, CreateComment, SearchComment, UpdateComment, SearchCommentFromPost, SearchCommentFromUser, CommentFromPost, CommentFromUser
+from ..schemas.comment import Comment, CreateComment, SearchComment, UpdateComment, SearchCommentFromPost, SearchCommentFromUser, ReturnComment
 from ..schemas.general import Message
 from ..schemas.user import ReturnUser
 
 from sqlalchemy.orm import Session
+from sqlalchemy import func, and_
 
-from typing import List
+from typing import List, Union, Optional
 
 router = APIRouter(
     prefix="/comment",
@@ -17,11 +18,32 @@ router = APIRouter(
 )
 
 
-@router.get("", response_model=Comment, responses={404: {"model": Message}})
+#TODO TESTS
+@router.get("s", response_model=List[ReturnComment])
+def get_comments(db: Session = Depends(get_db), limit: Union[None, int] = None, search: Optional[str] = "", skip: int = 0):
+    print(f'limit: {limit}, search: {search}, skip: {skip}')
+    return db.query(models.Comment, func.count(models.Comment.id).label("likes")).filter(models.Comment.content.contains(search)).join(models.LikeComment, models.Comment.id == models.LikeComment.comment_id, isouter=True).group_by(models.Comment.id).order_by(models.Comment.created_at.desc()).offset(skip).limit(limit).all()
+
+
+
+#TODO TESTS
+@router.get("s/post", response_model=List[ReturnComment])
+def get_comments_from_post(body: SearchCommentFromPost, db: Session = Depends(get_db), limit: Union[None, int] = None, search: Optional[str] = "", skip: int = 0):
+    return db.query(models.Comment, func.count(models.Comment.id).label("likes")).filter(and_(models.Comment.post_id == body.post_id, models.Comment.content.contains(search))).join(models.LikeComment, models.Comment.id == models.LikeComment.comment_id, isouter=True).group_by(models.Comment.id).order_by(models.Comment.created_at.desc()).offset(skip).limit(limit).all()
+
+
+#TODO TESTS
+@router.get("s/user", response_model=List[ReturnComment])
+def get_comments_from_user(body: SearchCommentFromUser, db: Session = Depends(get_db), limit: Union[None, int] = None, search: Optional[str] = "", skip: int = 0):    
+    return db.query(models.Comment, func.count(models.Comment.id).label("likes")).filter(and_(models.Comment.owner_id == body.owner_id, models.Comment.content.contains(search))).join(models.LikeComment, models.Comment.id == models.LikeComment.comment_id, isouter=True).group_by(models.Comment.id).order_by(models.Comment.created_at.desc()).offset(skip).limit(limit).all()
+
+
+#TODO TESTS
+@router.get("", response_model=ReturnComment, responses={404: {"model": Message}})
 def get_comment(body: SearchComment, db: Session = Depends(get_db)):
     print(body.dict())
 
-    comment = db.query(models.Comment).filter(models.Comment.id == body.id).first()
+    comment = db.query(models.Comment, func.count(models.LikeComment.comment_id).label("likes")).filter(models.Comment.id == body.id).join(models.LikeComment, models.Comment.id == models.LikeComment.comment_id, isouter=True).group_by(models.Comment.id).first()
 
     if not comment: 
          return JSONResponse(status_code=status.HTTP_404_NOT_FOUND, content={"message": f"comment with id: {body.id} was not found."})
@@ -29,6 +51,7 @@ def get_comment(body: SearchComment, db: Session = Depends(get_db)):
     return comment
 
 
+#TODO TESTS
 @router.post("", status_code=status.HTTP_201_CREATED, response_model=Comment)
 def create_comment(body: CreateComment, db: Session = Depends(get_db), current_user: ReturnUser = Depends(oauth2.get_current_user)):
     body = body.dict()
@@ -41,6 +64,7 @@ def create_comment(body: CreateComment, db: Session = Depends(get_db), current_u
     return comment
 
 
+#TODO TESTS
 @router.put("", response_model=Comment, responses={404: {"model": Message}, 401: {"model": Message}})
 def update_comment(body: UpdateComment, db: Session = Depends(get_db), current_user: ReturnUser = Depends(oauth2.get_current_user)):
     print(body.id)
@@ -60,6 +84,7 @@ def update_comment(body: UpdateComment, db: Session = Depends(get_db), current_u
     return comment
 
 
+#TODO TESTS
 @router.delete("", response_model=Message, responses={404: {"model": Message}, 401: {"model": Message}})
 def delete_comment(body: SearchComment, db: Session = Depends(get_db), current_user: ReturnUser = Depends(oauth2.get_current_user)):
     comment_query = db.query(models.Comment).filter(models.Comment.id == body['id'])
@@ -75,17 +100,3 @@ def delete_comment(body: SearchComment, db: Session = Depends(get_db), current_u
     db.commit()
 
     return {"message": f"comment with id: {body['id']} was deleted"}
-
-
-@router.get("s/post", response_model=List[CommentFromPost])
-def get_comments_from_post(body: SearchCommentFromPost, db: Session = Depends(get_db)):    
-    comments = db.query(models.Comment).filter(models.Comment.post_id == body.post_id).all()
-
-    return comments
-
-
-@router.get("s/user", response_model=List[CommentFromUser])
-def get_comments_from_user(body: SearchCommentFromUser, db: Session = Depends(get_db)):    
-    comments = db.query(models.Comment).filter(models.Comment.owner_id == body.owner_id).all()
-
-    return comments

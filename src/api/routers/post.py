@@ -3,13 +3,12 @@ from fastapi.responses import JSONResponse
 
 from ..database import get_db
 from .. import models, oauth2
-from ..schemas.post import Post, CreatePost, SearchPost, UpdatePost
+from ..schemas.post import Post, CreatePost, SearchPost, UpdatePost, ReturnPost
 from ..schemas.user import SearchUser, ReturnUser
 from ..schemas.general import Message
 
-
 from sqlalchemy.orm import Session
-from sqlalchemy import func
+from sqlalchemy import func, desc, or_, and_
 
 from typing import List, Union, Optional
 
@@ -20,29 +19,36 @@ router = APIRouter(
 )
 
 
-@router.get("s", response_model=List[Post])
+#TODO TESTS
+@router.get("s", response_model=List[ReturnPost])
 def get_posts(db: Session = Depends(get_db), limit: Union[None, int] = None, search: Optional[str] = "", skip: int = 0):
-    if limit: 
-        return db.query(models.Post).filter(models.Post.title.contains(search)).order_by(models.Post.created_at.desc()).offset(skip).limit(limit).all()
-    return db.query(models.Post).filter(models.Post.title.contains(search)).order_by(models.Post.created_at.desc()).offset(skip).all()
+    return db.query(models.Post, func.count(models.LikePost.post_id).label("likes")).filter(or_(models.Post.title.contains(search), models.Post.content.contains(search))).join(models.LikePost, models.Post.id == models.LikePost.post_id, isouter=True).group_by(models.Post.id).order_by(models.Post.created_at.desc()).offset(skip).limit(limit).all()
 
 
-@router.get("s/latest", response_model=Post, responses={404: {"model": Message}})
-def get_latest_post(db: Session = Depends(get_db)):
-    post = db.query(models.Post).order_by(models.Post.created_at.desc()).first()
+#TODO TESTS
+@router.get("s/likes", response_model=List[ReturnPost])
+def get_posts_most_likes(db: Session = Depends(get_db), limit: Union[None, int] = None, search: Optional[str] = "", skip: int = 0):
+    return db.query(models.Post, func.count(models.LikePost.post_id).label("likes")).filter(or_(models.Post.title.contains(search), models.Post.content.contains(search))).join(models.LikePost, models.Post.id == models.LikePost.post_id, isouter=True).group_by(models.Post.id).order_by(desc("likes"), models.Post.created_at.desc()).offset(skip).limit(limit).all()
+
+
+#TODO TESTS
+@router.get("s/latest", response_model=ReturnPost, responses={404: {"model": Message}})
+def get_latest_post(db: Session = Depends(get_db), search: Optional[str] = "", skip: int = 0):
+    
+    post = db.query(models.Post, func.count(models.LikePost.post_id).label("likes")).filter(or_(models.Post.title.contains(search), models.Post.content.contains(search))).join(models.LikePost, models.Post.id == models.LikePost.post_id, isouter=True).group_by(models.Post.id).order_by(models.Post.created_at.desc()).offset(skip).first()
     
     if not post:
         return JSONResponse(status_code=status.HTTP_404_NOT_FOUND, content={"message": "No posts yet."})
     return post
 
 
-@router.get("s/user", response_model=List[Post])
+#TODO TESTS
+@router.get("s/user", response_model=List[ReturnPost])
 def get_posts_from_user(body: SearchUser, db: Session = Depends(get_db), limit: Union[None, int] = None, search: Optional[str] = "", skip: int = 0):  
-    if limit: 
-        return db.query(models.Post).filter(models.Post.owner_id == body.id, models.Post.title.contains(search)).order_by(models.Post.created_at.desc()).offset(skip).limit(limit).all()
-    return db.query(models.Post).filter(models.Post.owner_id == body.id, models.Post.title.contains(search)).order_by(models.Post.created_at.desc()). offset(skip).all()
+    return db.query(models.Post, func.count(models.LikePost.post_id).label("likes")).filter(and_(models.Post.owner_id == body.id, or_(models.Post.title.contains(search), models.Post.content.contains(search)))).join(models.LikePost, models.Post.id == models.LikePost.post_id, isouter=True).group_by(models.Post.id).order_by(models.Post.created_at.desc()).offset(skip).limit(limit).all()
 
 
+#TODO TESTS
 @router.post("/", status_code=status.HTTP_201_CREATED, response_model=Post)
 def create_post(body: CreatePost, db: Session = Depends(get_db), current_user: ReturnUser = Depends(oauth2.get_current_user)):
     body = body.dict()
@@ -55,18 +61,18 @@ def create_post(body: CreatePost, db: Session = Depends(get_db), current_user: R
     return post
 
 
-@router.get("/", response_model=Post, responses={404: {"model": Message}})
+#TODO TESTS
+@router.get("/", response_model=ReturnPost, responses={404: {"model": Message}})
 def get_post(body: SearchPost, db: Session = Depends(get_db)):
-    post_id = body.dict()["id"]
 
-    post = db.query(models.Post).filter(models.Post.id == post_id).first()
+    post = db.query(models.Post, func.count(models.LikePost.post_id).label("likes")).filter(models.Post.id == body.id).join(models.LikePost, models.Post.id == models.LikePost.post_id, isouter=True).group_by(models.Post.id).first()
     
     if not post:
-        return JSONResponse(status_code=status.HTTP_404_NOT_FOUND, content={"message": f"post with id: {post_id} was not found."})
+        return JSONResponse(status_code=status.HTTP_404_NOT_FOUND, content={"message": f"post with id: {body.id} was not found."})
     return post
 
 
-
+#TODO TESTS
 @router.put("/", response_model=Post, responses={404: {"model": Message}, 401: {"model": Message}})
 def update_post(body: UpdatePost, db: Session = Depends(get_db), current_user: ReturnUser = Depends(oauth2.get_current_user)):
     body = body.dict()
@@ -90,6 +96,7 @@ def update_post(body: UpdatePost, db: Session = Depends(get_db), current_user: R
     return post
 
 
+#TODO TESTS
 @router.delete("/", response_model=Message, responses={404: {"model": Message}, 401: {"model": Message}})
 def delete_post(body: SearchPost, db: Session = Depends(get_db), current_user: ReturnUser = Depends(oauth2.get_current_user)):
     post_query = db.query(models.Post).filter(models.Post.id == body.id)

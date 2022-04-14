@@ -18,6 +18,7 @@ router = APIRouter(
 )
 
 
+#TODO TESTS
 @router.put("", response_model=Message, responses={404: {"model": Message}, 409: {"model": Message}})
 def like_comment(body: CreateLikeComment, db: Session = Depends(get_db), current_user: ReturnUser = Depends(oauth2.get_current_user)):
 
@@ -43,6 +44,7 @@ def like_comment(body: CreateLikeComment, db: Session = Depends(get_db), current
     return {"message": f"Removed like in comment with id: {body.comment_id}"}
 
 
+#TODO TESTS
 @router.put("/toggle", response_model=Message, responses={404: {"model": Message}})
 def like_comment_toggle(body: CreateLikeCommentToggle, db: Session = Depends(get_db), current_user: ReturnUser = Depends(oauth2.get_current_user)):
 
@@ -64,11 +66,13 @@ def like_comment_toggle(body: CreateLikeCommentToggle, db: Session = Depends(get
     return {"message": f"Removed like in comment with id: {body.comment_id}"}
 
 
+#TODO TESTS
 @router.get("s", response_model=List[LikeComment])
 def get_likes_from_comment(body: SearchLikeFromComment, db: Session = Depends(get_db)):    
     return db.query(models.LikeComment).filter(models.LikeComment.comment_id == body.comment_id).all()   
 
 
+#TODO TESTS
 @router.get("s/user", response_model=List[LikeComment])
 def get_likes_from_user(body: SearchLikeFromUser, db: Session = Depends(get_db)):
     return db.query(models.LikeComment).filter(models.LikeComment.owner_id == body.owner_id).all()   
