@@ -90,9 +90,6 @@ def change_user_password(body: ChangePassword, db: Session = Depends(get_db), cu
 #TODO TESTS
 @router.delete("/", response_model=Message, responses={404: {"model": Message}})
 def delete_user(db: Session = Depends(get_db), current_user: User = Depends(oauth2.get_current_user)):
-    if current_user is None:
-        return JSONResponse(status_code=status.HTTP_404_NOT_FOUND, content={"message": f"user was not found."})
-    
     user_id = current_user.id
     
     user_query = db.query(models.User).filter(models.User.id == user_id)
