@@ -12,7 +12,7 @@ class Post(BaseModel):
     created_at: datetime
     owner_id: int
     owner: ReturnUser
-    
+
     class Config:
         orm_mode = True
 
@@ -20,7 +20,8 @@ class Post(BaseModel):
 class ReturnPost(BaseModel):
     Post: Post
     likes: int
-    
+
+
     class Config:
         orm_mode = True
 
@@ -31,12 +32,7 @@ class CreatePost(BaseModel):
     published: bool = True
 
 
-class SearchPost(BaseModel):
-    id: int
-
-
 class UpdatePost(BaseModel):
-    id: int
     title: Optional[str]
     content: Optional[str]
     published: Optional[bool] = True

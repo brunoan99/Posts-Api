@@ -13,13 +13,13 @@ from sqlalchemy import func, and_
 from typing import List, Union, Optional
 
 router = APIRouter(
-    prefix="/comment",
+    prefix="/comments",
     tags=["Comments"]
 )
 
 
 #TODO TESTS
-@router.get("s", response_model=List[ReturnComment])
+@router.get("", response_model=List[ReturnComment])
 def get_comments(db: Session = Depends(get_db), limit: Union[None, int] = None, search: Optional[str] = "", skip: int = 0):
     print(f'limit: {limit}, search: {search}, skip: {skip}')
     return db.query(models.Comment, func.count(models.Comment.id).label("likes")).filter(models.Comment.content.contains(search)).join(models.LikeComment, models.Comment.id == models.LikeComment.comment_id, isouter=True).group_by(models.Comment.id).order_by(models.Comment.created_at.desc()).offset(skip).limit(limit).all()
@@ -27,13 +27,13 @@ def get_comments(db: Session = Depends(get_db), limit: Union[None, int] = None, 
 
 
 #TODO TESTS
-@router.get("s/post/{post_id}", response_model=List[ReturnComment])
+@router.get("/post/{post_id}", response_model=List[ReturnComment])
 def get_comments_from_post(post_id: int, db: Session = Depends(get_db), limit: Union[None, int] = None, search: Optional[str] = "", skip: int = 0):
     return db.query(models.Comment, func.count(models.Comment.id).label("likes")).filter(and_(models.Comment.post_id == post_id, models.Comment.content.contains(search))).join(models.LikeComment, models.Comment.id == models.LikeComment.comment_id, isouter=True).group_by(models.Comment.id).order_by(models.Comment.created_at.desc()).offset(skip).limit(limit).all()
 
 
 #TODO TESTS
-@router.get("s/user/{owner_id}", response_model=List[ReturnComment])
+@router.get("/user/{owner_id}", response_model=List[ReturnComment])
 def get_comments_from_user(owner_id: int, db: Session = Depends(get_db), limit: Union[None, int] = None, search: Optional[str] = "", skip: int = 0):    
     return db.query(models.Comment, func.count(models.Comment.id).label("likes")).filter(and_(models.Comment.owner_id == owner_id, models.Comment.content.contains(search))).join(models.LikeComment, models.Comment.id == models.LikeComment.comment_id, isouter=True).group_by(models.Comment.id).order_by(models.Comment.created_at.desc()).offset(skip).limit(limit).all()
 

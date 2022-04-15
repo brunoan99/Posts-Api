@@ -12,7 +12,7 @@ from typing import List
 
 
 router = APIRouter(
-    prefix="/user",
+    prefix="/users",
     tags=["Users"]
 )
 
@@ -22,7 +22,7 @@ def verify_if_new_email_actualy_in_use(email: str, db: Session):
 
 
 #TODO TESTS
-@router.get("s", response_model=List[ReturnUser])
+@router.get("", response_model=List[ReturnUser])
 def get_users(db: Session = Depends(get_db)):
     users = db.query(models.User).all()
     return users
@@ -31,7 +31,6 @@ def get_users(db: Session = Depends(get_db)):
 #TODO TESTS
 @router.get("/{id}", response_model=ReturnUser, responses={404: {"model": Message}})
 def get_user(id: int, db: Session = Depends(get_db)):
-    
     user = db.query(models.User).filter(models.User.id == id).first()
     
     if not user:
@@ -40,7 +39,7 @@ def get_user(id: int, db: Session = Depends(get_db)):
 
 
 #TODO TESTS
-@router.post("/", status_code=status.HTTP_201_CREATED, response_model=ReturnUser, responses={409: {"model": Message}})
+@router.post("", status_code=status.HTTP_201_CREATED, response_model=ReturnUser, responses={409: {"model": Message}})
 def create_user(body: CreateUser, db: Session = Depends(get_db)):
     if verify_if_new_email_actualy_in_use(body.email, db):
         return JSONResponse(status_code=status.HTTP_409_CONFLICT, content={"message": f"user with email: {body.email} already exist."})
@@ -55,7 +54,7 @@ def create_user(body: CreateUser, db: Session = Depends(get_db)):
 
 
 #TODO TESTS
-@router.put("/", response_model=ReturnUser, responses={404: {"model": Message}, 409: {"model": Message}})
+@router.put("", response_model=ReturnUser, responses={404: {"model": Message}, 409: {"model": Message}})
 def update_user(body: UpdateUser, db: Session = Depends(get_db), current_user: User = Depends(oauth2.get_current_user)): 
     if verify_if_new_email_actualy_in_use(body.email, db):
         return JSONResponse(status_code=status.HTTP_409_CONFLICT, content={"message": f"user with email: {body.email} already exist."})        
@@ -87,7 +86,7 @@ def change_user_password(body: ChangePassword, db: Session = Depends(get_db), cu
 
 
 #TODO TESTS
-@router.delete("/", response_model=Message, responses={404: {"model": Message}})
+@router.delete("", response_model=Message, responses={404: {"model": Message}})
 def delete_user(db: Session = Depends(get_db), current_user: User = Depends(oauth2.get_current_user)):
     user_id = current_user.id
     
