@@ -18,16 +18,3 @@ class LikeComment(BaseModel):
 
 class CreateLikeComment(BaseModel):
     comment_id: int
-    like: int
-
-
-class CreateLikeCommentToggle(BaseModel):
-    comment_id: int
-
-
-class SearchLikeFromComment(BaseModel):
-    comment_id: int
-
-
-class SearchLikeFromUser(BaseModel):
-    owner_id: int

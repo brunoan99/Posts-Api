@@ -37,14 +37,6 @@ class SearchComment(BaseModel):
     id: int
 
 
-class SearchCommentFromPost(BaseModel):
-    post_id: int
-
-
-class SearchCommentFromUser(BaseModel):
-    owner_id: int
-
-
 class UpdateComment(BaseModel):
     id: int
     content: str

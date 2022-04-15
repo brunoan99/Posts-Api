@@ -1,9 +1,9 @@
-from fastapi import status, Depends, APIRouter, HTTPException
+from fastapi import status, Depends, APIRouter
 from fastapi.responses import JSONResponse
 
 from ..database import get_db
 from .. import models, utils, oauth2
-from ..schemas.user import User, CreateUser, SearchUser, UpdateUser, ReturnUser, ChangePassword
+from ..schemas.user import User, CreateUser, UpdateUser, ReturnUser, ChangePassword
 from ..schemas.general import Message
 
 from sqlalchemy.orm import Session
@@ -29,14 +29,13 @@ def get_users(db: Session = Depends(get_db)):
 
 
 #TODO TESTS
-@router.get("/", response_model=ReturnUser, responses={404: {"model": Message}})
-def get_user(body: SearchUser, db: Session = Depends(get_db)):
-    user_id = body.id
+@router.get("/{id}", response_model=ReturnUser, responses={404: {"model": Message}})
+def get_user(id: int, db: Session = Depends(get_db)):
     
-    user = db.query(models.User).filter(models.User.id == user_id).first()
+    user = db.query(models.User).filter(models.User.id == id).first()
     
     if not user:
-        return JSONResponse(status_code=status.HTTP_404_NOT_FOUND, content={"message": f'user with id: {user_id} was not found.'})
+        return JSONResponse(status_code=status.HTTP_404_NOT_FOUND, content={"message": f'user with id: {id} was not found.'})
     return user
 
 

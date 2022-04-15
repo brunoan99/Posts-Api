@@ -12,10 +12,6 @@ class User(BaseModel):
         orm_mode = True
 
 
-class SearchUser(BaseModel):
-    id: int
-
-
 class CreateUser(BaseModel):
     email: EmailStr
     password: str

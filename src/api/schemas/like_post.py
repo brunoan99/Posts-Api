@@ -18,16 +18,3 @@ class LikePost(BaseModel):
 
 class CreateLikePost(BaseModel):
     post_id: int
-    like: int
-
-
-class CreateLikePostToggle(BaseModel):
-    post_id: int
-
-
-class SearchLikeFromPost(BaseModel):
-    post_id: int
-
-
-class SearchLikeFromUser(BaseModel):
-    owner_id: int

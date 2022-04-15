@@ -3,7 +3,7 @@ from fastapi.responses import JSONResponse
 
 from ..database import get_db
 from .. import models, oauth2
-from ..schemas.comment import Comment, CreateComment, SearchComment, UpdateComment, SearchCommentFromPost, SearchCommentFromUser, ReturnComment
+from ..schemas.comment import Comment, CreateComment, SearchComment, UpdateComment, ReturnComment
 from ..schemas.general import Message
 from ..schemas.user import ReturnUser
 
@@ -27,26 +27,25 @@ def get_comments(db: Session = Depends(get_db), limit: Union[None, int] = None, 
 
 
 #TODO TESTS
-@router.get("s/post", response_model=List[ReturnComment])
-def get_comments_from_post(body: SearchCommentFromPost, db: Session = Depends(get_db), limit: Union[None, int] = None, search: Optional[str] = "", skip: int = 0):
-    return db.query(models.Comment, func.count(models.Comment.id).label("likes")).filter(and_(models.Comment.post_id == body.post_id, models.Comment.content.contains(search))).join(models.LikeComment, models.Comment.id == models.LikeComment.comment_id, isouter=True).group_by(models.Comment.id).order_by(models.Comment.created_at.desc()).offset(skip).limit(limit).all()
+@router.get("s/post/{post_id}", response_model=List[ReturnComment])
+def get_comments_from_post(post_id: int, db: Session = Depends(get_db), limit: Union[None, int] = None, search: Optional[str] = "", skip: int = 0):
+    return db.query(models.Comment, func.count(models.Comment.id).label("likes")).filter(and_(models.Comment.post_id == post_id, models.Comment.content.contains(search))).join(models.LikeComment, models.Comment.id == models.LikeComment.comment_id, isouter=True).group_by(models.Comment.id).order_by(models.Comment.created_at.desc()).offset(skip).limit(limit).all()
 
 
 #TODO TESTS
-@router.get("s/user", response_model=List[ReturnComment])
-def get_comments_from_user(body: SearchCommentFromUser, db: Session = Depends(get_db), limit: Union[None, int] = None, search: Optional[str] = "", skip: int = 0):    
-    return db.query(models.Comment, func.count(models.Comment.id).label("likes")).filter(and_(models.Comment.owner_id == body.owner_id, models.Comment.content.contains(search))).join(models.LikeComment, models.Comment.id == models.LikeComment.comment_id, isouter=True).group_by(models.Comment.id).order_by(models.Comment.created_at.desc()).offset(skip).limit(limit).all()
+@router.get("s/user/{owner_id}", response_model=List[ReturnComment])
+def get_comments_from_user(owner_id: int, db: Session = Depends(get_db), limit: Union[None, int] = None, search: Optional[str] = "", skip: int = 0):    
+    return db.query(models.Comment, func.count(models.Comment.id).label("likes")).filter(and_(models.Comment.owner_id == owner_id, models.Comment.content.contains(search))).join(models.LikeComment, models.Comment.id == models.LikeComment.comment_id, isouter=True).group_by(models.Comment.id).order_by(models.Comment.created_at.desc()).offset(skip).limit(limit).all()
 
 
 #TODO TESTS
-@router.get("", response_model=ReturnComment, responses={404: {"model": Message}})
-def get_comment(body: SearchComment, db: Session = Depends(get_db)):
-    print(body.dict())
+@router.get("/{id}", response_model=ReturnComment, responses={404: {"model": Message}})
+def get_comment(id: int, db: Session = Depends(get_db)):
 
-    comment = db.query(models.Comment, func.count(models.LikeComment.comment_id).label("likes")).filter(models.Comment.id == body.id).join(models.LikeComment, models.Comment.id == models.LikeComment.comment_id, isouter=True).group_by(models.Comment.id).first()
+    comment = db.query(models.Comment, func.count(models.LikeComment.comment_id).label("likes")).filter(models.Comment.id == id).join(models.LikeComment, models.Comment.id == models.LikeComment.comment_id, isouter=True).group_by(models.Comment.id).first()
 
     if not comment: 
-         return JSONResponse(status_code=status.HTTP_404_NOT_FOUND, content={"message": f"comment with id: {body.id} was not found."})
+         return JSONResponse(status_code=status.HTTP_404_NOT_FOUND, content={"message": f"comment with id: {id} was not found."})
 
     return comment
 
