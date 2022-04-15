@@ -42,7 +42,7 @@ def like_post_toggle(body: CreateLikePost, db: Session = Depends(get_db), curren
 
 
 #TODO TESTS 
-@router.get("/{post_id}/{owner_id}", response_model=LikePost, responses={404, {"model": Message}})
+@router.get("/{post_id}/{owner_id}", response_model=LikePost, responses={404: {"model": Message}})
 def get_like(post_id: int, owner_id: int, db: Session = Depends(get_db)):
     comment = db.query(models.Post).filter(models.Post.id == post_id).first()
 
