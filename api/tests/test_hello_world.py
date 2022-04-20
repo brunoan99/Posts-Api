@@ -1,4 +1,6 @@
 from api.main import app
+
+from fastapi import status
 from fastapi.testclient import TestClient
 
 client = TestClient(app)
@@ -6,5 +8,5 @@ client = TestClient(app)
 
 def test_read_main():
     response = client.get("/")
-    assert response.status_code == 200
-    assert response.json() == {"message": "Welcome to my API"}
+    assert response.status_code == status.HTTP_200_OK
+    response.json() == {"message": "Welcome to my API"}
